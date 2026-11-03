@@ -1,0 +1,166 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-reference
+      author: sber-kkd
+      changes:
+        - insert:
+            tableName: kkd_unit
+            columns:
+              - column: { name: id, value: 1 }
+              - column: { name: code, value: "HQ-CIB" }
+              - column: { name: name, value: "Департамент корпоративного бизнеса" }
+              - column: { name: parent_id, value: null }
+        - insert:
+            tableName: kkd_unit
+            columns:
+              - column: { name: id, value: 2 }
+              - column: { name: code, value: "CIB-SALES" }
+              - column: { name: name, value: "Управление продаж корпоративным клиентам" }
+              - column: { name: parent_id, value: 1 }
+        - insert:
+            tableName: kkd_unit
+            columns:
+              - column: { name: id, value: 3 }
+              - column: { name: code, value: "CIB-MID" }
+              - column: { name: name, value: "Управление среднего бизнеса" }
+              - column: { name: parent_id, value: 1 }
+        - insert:
+            tableName: kkd_unit
+            columns:
+              - column: { name: id, value: 4 }
+              - column: { name: code, value: "HQ-SME" }
+              - column: { name: name, value: "Департамент малого и среднего бизнеса" }
+              - column: { name: parent_id, value: null }
+        - insert:
+            tableName: kkd_unit
+            columns:
+              - column: { name: id, value: 5 }
+              - column: { name: code, value: "SME-REG" }
+              - column: { name: name, value: "Управление региональных продаж" }
+              - column: { name: parent_id, value: 4 }
+
+        # Справочник правил ККД (реализованные 4 правила)
+        - insert:
+            tableName: kkd_rule
+            columns:
+              - column: { name: code, value: "GOAL_NO_OWNER" }
+              - column: { name: name, value: "Цель без ответственного" }
+              - column: { name: severity, value: "critical" }
+        - insert:
+            tableName: kkd_rule
+            columns:
+              - column: { name: code, value: "GOAL_NO_KR" }
+              - column: { name: name, value: "У активной цели нет ни одного ключевого результата" }
+              - column: { name: severity, value: "critical" }
+        - insert:
+            tableName: kkd_rule
+            columns:
+              - column: { name: code, value: "CASCADE_NO_PARENT" }
+              - column: { name: name, value: "Цель не связана с целью вышестоящего уровня" }
+              - column: { name: severity, value: "major" }
+        - insert:
+            tableName: kkd_rule
+            columns:
+              - column: { name: code, value: "KR_WEIGHTS_SUM" }
+              - column: { name: name, value: "Сумма весов ключевых результатов не равна 100%" }
+              - column: { name: severity, value: "major" }
+
+      rollback:
+        - delete:
+            tableName: kkd_issue
+            where: 1=1
+        - delete:
+            tableName: kkd_rule
+            where: 1=1
+
+  - changeSet:
+      id: 002-seed-goals
+      author: sber-kkd
+      changes:
+
+        # --- АКТИВНЫЕ цели (проверяются правилами) ---
+        # unit 1
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 1 } }, { column: { name: code, value: "G1" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: "Petrov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 2 } }, { column: { name: code, value: "G2" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 3 } }, { column: { name: code, value: "G3" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: "Ivanov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 4 } }, { column: { name: code, value: "G4" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: "Ivanov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 5 } }, { column: { name: code, value: "G5" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 18 } }, { column: { name: code, value: "G18" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: "Petrov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 20 } }, { column: { name: code, value: "G20" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: "Ivanov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+
+        # unit 2
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 6 } }, { column: { name: code, value: "G6" } }, { column: { name: unit_id, value: 2 } }, { column: { name: owner, value: "Korolev" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 7 } }, { column: { name: code, value: "G7" } }, { column: { name: unit_id, value: 2 } }, { column: { name: owner, value: "Korolev" } }, { column: { name: parent_goal_id, value: 1 } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 8 } }, { column: { name: code, value: "G8" } }, { column: { name: unit_id, value: 2 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 9 } }, { column: { name: code, value: "G9" } }, { column: { name: unit_id, value: 2 } }, { column: { name: owner, value: "Korolev" } }, { column: { name: parent_goal_id, value: 1 } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+
+        # unit 3
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 10 } }, { column: { name: code, value: "G10" } }, { column: { name: unit_id, value: 3 } }, { column: { name: owner, value: "Novikov" } }, { column: { name: parent_goal_id, value: 7 } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 11 } }, { column: { name: code, value: "G11" } }, { column: { name: unit_id, value: 3 } }, { column: { name: owner, value: "Novikov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 12 } }, { column: { name: code, value: "G12" } }, { column: { name: unit_id, value: 3 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: 7 } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+
+        # unit 4
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 13 } }, { column: { name: code, value: "G13" } }, { column: { name: unit_id, value: 4 } }, { column: { name: owner, value: "Fedorov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 19 } }, { column: { name: code, value: "G19" } }, { column: { name: unit_id, value: 4 } }, { column: { name: owner, value: "Fedorov" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+
+        # unit 5
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 14 } }, { column: { name: code, value: "G14" } }, { column: { name: unit_id, value: 5 } }, { column: { name: owner, value: "Alekseev" } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 15 } }, { column: { name: code, value: "G15" } }, { column: { name: unit_id, value: 5 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: 13 } }, { column: { name: status, value: "ACTIVE" } }, { column: { name: due_date, value: "2026-12-31" } } ] }
+
+        # --- НЕактивные цели (правилами НЕ проверяются) ---
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 16 } }, { column: { name: code, value: "G16" } }, { column: { name: unit_id, value: 1 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "CLOSED" } }, { column: { name: due_date, value: null } } ] }
+        - insert: { tableName: kkd_goal, columns: [ { column: { name: id, value: 17 } }, { column: { name: code, value: "G17" } }, { column: { name: unit_id, value: 2 } }, { column: { name: owner, value: null } }, { column: { name: parent_goal_id, value: null } }, { column: { name: status, value: "DRAFT" } }, { column: { name: due_date, value: null } } ] }
+
+      rollback:
+        - delete:
+            tableName: kkd_goal
+            where: 1=1
+        - delete:
+            tableName: kkd_unit
+            where: 1=1
+
+  - changeSet:
+      id: 002-seed-kr
+      author: sber-kkd
+      changes:
+
+        # G1: веса 50/50
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 1 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 51 } }, { column: { name: weight, value: 50 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 1 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 80 } }, { column: { name: weight, value: 50 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G2: 1 КР (вес 100)
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 2 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 10 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G3: КР нет -> GOAL_NO_KR
+        # G4: веса 40/40 (сумма 80)
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 4 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 30 } }, { column: { name: weight, value: 40 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 4 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 60 } }, { column: { name: weight, value: 40 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G5: КР нет -> GOAL_NO_KR (и нет владельца)
+        # G6: 1 КР, цель без родителя в дочернем подразделении -> CASCADE
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 6 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 0 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G7: 1 КР, родитель есть -> валидная
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 7 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 50 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G8: КР нет, нет владельца, нет родителя -> 3 правила
+        # G9: веса 50/40 (сумма 90)
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 9 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 20 } }, { column: { name: weight, value: 50 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 9 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 5 } }, { column: { name: weight, value: 40 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G10: 1 КР, родитель есть
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 10 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 90 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G11: КР нет, нет родителя
+        # G12: 1 КР, нет владельца
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 12 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 0 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G13: 1 КР, корневое подразделение
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 13 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 33 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G14: 1 КР, нет родителя в дочернем подразделении -> CASCADE
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 14 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 70 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G15: КР нет, нет владельца
+        # G18: 1 КР, валидная
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 18 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 25 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G19: 1 КР
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 19 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 40 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G20: 1 КР
+        - insert: { tableName: kkd_kr, columns: [ { column: { name: goal_id, value: 20 } }, { column: { name: target_value, value: 100 } }, { column: { name: actual_value, value: 15 } }, { column: { name: weight, value: 100 } }, { column: { name: fact_updated_at, value: "2026-10-27 09:00:00" } } ] }
+        # G17 (DRAFT): КР с весом 30/30 => не проверяется
+
+      rollback:
+        - delete:
+            tableName: kkd_kr
+            where: 1=1

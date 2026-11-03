@@ -1,0 +1,75 @@
+databaseChangeLog:
+  # Прогон 1 (RUN-001) — первый прогон, сравнения нет
+  - changeSet:
+      id: 003-run-001
+      author: sber-kkd
+      changes:
+        - insert:
+            tableName: kkd_run
+            columns:
+              - column: { name: id, value: 1 }
+              - column: { name: code, value: "RUN-001" }
+              - column: { name: snapshot_date, value: "2026-10-19" }
+              - column: { name: status, value: "SUCCESS" }
+              - column: { name: compared_to_run_id, value: null }
+
+        # Идентифицируемые объекты для дельты: goal:1,2,4,9,15,12 (по правилу+объекту)
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 2 } }, { column: { name: object_ref, value: "goal:8" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 3 } }, { column: { name: object_ref, value: "goal:12" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 5 } }, { column: { name: object_ref, value: "goal:15" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "GOAL_NO_KR" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:3" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "0" } }, { column: { name: expected_value, value: ">=1" } }, { column: { name: recommendation, value: "Добавить ключевые результаты" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "GOAL_NO_KR" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:5" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "0" } }, { column: { name: expected_value, value: ">=1" } }, { column: { name: recommendation, value: "Добавить ключевые результаты" } } ] }
+
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "CASCADE_NO_PARENT" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:1" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "нет" } }, { column: { name: expected_value, value: "родительская цель" } }, { column: { name: recommendation, value: "Связать с целью вышестоящего уровня" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "CASCADE_NO_PARENT" } }, { column: { name: unit_id, value: 2 } }, { column: { name: object_ref, value: "goal:6" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "нет" } }, { column: { name: expected_value, value: "родительская цель" } }, { column: { name: recommendation, value: "Связать с целью вышестоящего уровня" } } ] }
+
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "KR_WEIGHTS_SUM" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:4" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "80%" } }, { column: { name: expected_value, value: "100%" } }, { column: { name: recommendation, value: "Скорректировать веса КР" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 1 } }, { column: { name: rule_code, value: "KR_WEIGHTS_SUM" } }, { column: { name: unit_id, value: 2 } }, { column: { name: object_ref, value: "goal:9" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "90%" } }, { column: { name: expected_value, value: "100%" } }, { column: { name: recommendation, value: "Скорректировать веса КР" } } ] }
+
+      rollback:
+        - delete:
+            tableName: kkd_issue
+            where: run_id = 1
+        - delete:
+            tableName: kkd_run
+            where: id = 1
+
+  # Прогон 2 (RUN-002) — сравнивается с RUN-001
+  - changeSet:
+      id: 003-run-002
+      author: sber-kkd
+      changes:
+        - insert:
+            tableName: kkd_run
+            columns:
+              - column: { name: id, value: 2 }
+              - column: { name: code, value: "RUN-002" }
+              - column: { name: snapshot_date, value: "2026-10-26" }
+              - column: { name: status, value: "SUCCESS" }
+              - column: { name: compared_to_run_id, value: 1 }
+
+        # GOAL_NO_OWNER: goal:8,12 сохранились, goal:15 исправлена
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 2 } }, { column: { name: object_ref, value: "goal:8" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 3 } }, { column: { name: object_ref, value: "goal:12" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+        # новая: goal:2 без владельца (был в прогоне 1 с владельцем)
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "GOAL_NO_OWNER" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:2" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "пусто" } }, { column: { name: expected_value, value: "ФИО ответственного" } }, { column: { name: recommendation, value: "Назначить ответственного за цель" } } ] }
+
+        # GOAL_NO_KR: goal:3 сохранилась, goal:5 исправлена, новая goal:11
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "GOAL_NO_KR" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:3" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "0" } }, { column: { name: expected_value, value: ">=1" } }, { column: { name: recommendation, value: "Добавить ключевые результаты" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "GOAL_NO_KR" } }, { column: { name: unit_id, value: 3 } }, { column: { name: object_ref, value: "goal:11" } }, { column: { name: severity, value: "critical" } }, { column: { name: actual_value, value: "0" } }, { column: { name: expected_value, value: ">=1" } }, { column: { name: recommendation, value: "Добавить ключевые результаты" } } ] }
+
+        # CASCADE_NO_PARENT: goal:1(корень, ок с учётом логики), goal:6 сохранилась, новая goal:14
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "CASCADE_NO_PARENT" } }, { column: { name: unit_id, value: 2 } }, { column: { name: object_ref, value: "goal:6" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "нет" } }, { column: { name: expected_value, value: "родительская цель" } }, { column: { name: recommendation, value: "Связать с целью вышестоящего уровня" } } ] }
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "CASCADE_NO_PARENT" } }, { column: { name: unit_id, value: 5 } }, { column: { name: object_ref, value: "goal:14" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "нет" } }, { column: { name: expected_value, value: "родительская цель" } }, { column: { name: recommendation, value: "Связать с целью вышестоящего уровня" } } ] }
+
+        # KR_WEIGHTS_SUM: goal:4 сохранилась, goal:9 исправлена
+        - insert: { tableName: kkd_issue, columns: [ { column: { name: run_id, value: 2 } }, { column: { name: rule_code, value: "KR_WEIGHTS_SUM" } }, { column: { name: unit_id, value: 1 } }, { column: { name: object_ref, value: "goal:4" } }, { column: { name: severity, value: "major" } }, { column: { name: actual_value, value: "80%" } }, { column: { name: expected_value, value: "100%" } }, { column: { name: recommendation, value: "Скорректировать веса КР" } } ] }
+
+      rollback:
+        - delete:
+            tableName: kkd_issue
+            where: run_id = 2
+        - delete:
+            tableName: kkd_run
+            where: id = 2

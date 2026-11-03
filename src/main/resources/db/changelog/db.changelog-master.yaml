@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/001_schema.yaml
+  - include:
+      file: db/changelog/002_seed.yaml
+  - include:
+      file: db/changelog/003_seed_runs.yaml

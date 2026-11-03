@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kkd-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/kkd}
+    username: ${DB_USER:kkd}
+    password: ${DB_PASSWORD:kkd}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+logging:
+  level:
+    root: INFO
+    com.sber.kkd: DEBUG

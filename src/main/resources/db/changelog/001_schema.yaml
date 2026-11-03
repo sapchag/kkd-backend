@@ -1,0 +1,317 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-schema
+      author: sber-kkd
+      changes:
+        - createTable:
+            tableName: kkd_unit
+            remarks: Подразделения с иерархией
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: code
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_unit
+            baseColumnNames: parent_id
+            referencedTableName: kkd_unit
+            referencedColumnNames: id
+            constraintName: fk_unit_parent
+
+        - createTable:
+            tableName: kkd_goal
+            remarks: Цели сотрудников
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: code
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: unit_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: owner
+                  type: varchar(128)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: parent_goal_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: date
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_goal
+            baseColumnNames: unit_id
+            referencedTableName: kkd_unit
+            referencedColumnNames: id
+            constraintName: fk_goal_unit
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_goal
+            baseColumnNames: parent_goal_id
+            referencedTableName: kkd_goal
+            referencedColumnNames: id
+            constraintName: fk_goal_parent
+
+        - createTable:
+            tableName: kkd_kr
+            remarks: Ключевые результаты
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: goal_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: target_value
+                  type: numeric(18,2)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: actual_value
+                  type: numeric(18,2)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: weight
+                  type: numeric(8,4)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fact_updated_at
+                  type: timestamp
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_kr
+            baseColumnNames: goal_id
+            referencedTableName: kkd_goal
+            referencedColumnNames: id
+            constraintName: fk_kr_goal
+
+        - createTable:
+            tableName: kkd_rule
+            remarks: Справочник правил ККД
+            columns:
+              - column:
+                  name: code
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: kkd_run
+            remarks: Прогоны ККД
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: code
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: snapshot_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: compared_to_run_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_run
+            baseColumnNames: compared_to_run_id
+            referencedTableName: kkd_run
+            referencedColumnNames: id
+            constraintName: fk_run_compared_to
+
+        - createTable:
+            tableName: kkd_issue
+            remarks: Найденные проблемы
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: run_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rule_code
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+              - column:
+                  name: object_ref
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_value
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: expected_value
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: recommendation
+                  type: varchar(512)
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_issue
+            baseColumnNames: run_id
+            referencedTableName: kkd_run
+            referencedColumnNames: id
+            constraintName: fk_issue_run
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_issue
+            baseColumnNames: rule_code
+            referencedTableName: kkd_rule
+            referencedColumnNames: code
+            constraintName: fk_issue_rule
+
+        - addForeignKeyConstraint:
+            baseTableName: kkd_issue
+            baseColumnNames: unit_id
+            referencedTableName: kkd_unit
+            referencedColumnNames: id
+            constraintName: fk_issue_unit
+
+        - createIndex:
+            tableName: kkd_issue
+            indexName: idx_issue_run_severity
+            columns:
+              - column:
+                  name: run_id
+              - column:
+                  name: severity
+
+        - createIndex:
+            tableName: kkd_issue
+            indexName: idx_issue_run_unit
+            columns:
+              - column:
+                  name: run_id
+              - column:
+                  name: unit_id
+
+      rollback:
+        - dropAllForeignKeyConstraints:
+            baseTableName: kkd_unit
+        - dropAllForeignKeyConstraints:
+            baseTableName: kkd_goal
+        - dropAllForeignKeyConstraints:
+            baseTableName: kkd_kr
+        - dropAllForeignKeyConstraints:
+            baseTableName: kkd_run
+        - dropAllForeignKeyConstraints:
+            baseTableName: kkd_issue
+        - dropTable:
+            tableName: kkd_issue
+        - dropTable:
+            tableName: kkd_run
+        - dropTable:
+            tableName: kkd_rule
+        - dropTable:
+            tableName: kkd_kr
+        - dropTable:
+            tableName: kkd_goal
+        - dropTable:
+            tableName: kkd_unit
