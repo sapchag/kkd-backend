@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ККД — Контроль качества данных по целям</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #dfe3e8;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --primary: #2f5d8f;
+    --critical: #c0392b;
+    --major: #d97a0a;
+    --minor: #8a6d3b;
+    --bad: #c0392b;
+    --good: #1e7e47;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 17px; font-weight: 600; }
+  header .sub { font-size: 12px; opacity: .85; }
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  select, button {
+    border: 1px solid var(--border);
+    background: #fff;
+    padding: 7px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  button { cursor: pointer; background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 500; }
+  button:hover { opacity: .9; }
+  main { padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+  .section-head {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+  }
+  .section-head .hint { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .section-body { padding: 16px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .metric {
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: #fafbfc;
+  }
+  .metric .m-title { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .metric .m-value { font-size: 24px; font-weight: 700; }
+  .metric .m-delta { font-size: 13px; margin-top: 4px; }
+  .metric .m-comp { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+  .muted { color: var(--muted); }
+  .sev-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sev-pill { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; min-width: 120px; position: relative; }
+  .sev-pill .code { font-weight: 600; }
+  .sev-pill .cnt { font-size: 20px; font-weight: 700; }
+  .sev-pill .prev { font-size: 12px; color: var(--muted); }
+  .delta-block { display: flex; gap: 12px; flex-wrap: wrap; }
+  .delta-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; text-align: center; min-width: 110px; }
+  .delta-item .dl { font-size: 12px; color: var(--muted); }
+  .delta-item .dv { font-size: 22px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+  th { background: #fafbfc; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  tr:hover td { background: #f8fafc; }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .badge {
+    display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+  }
+  .b-critical { background: #fdecea; color: var(--critical); }
+  .b-major { background: #fdf0e0; color: var(--major); }
+  .b-minor { background: #f5efdf; color: var(--minor); }
+  .b-new { background: #e7eff9; color: var(--primary); }
+  .b-persisting { background: #fdf0e0; color: var(--major); }
+  .b-resolved { background: #e6f3eb; color: var(--good); }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  .error-box { background: #fdecea; border: 1px solid #f5c6c0; color: var(--critical); padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+  .empty-box { color: var(--muted); padding: 16px; text-align: center; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+  .raw { background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 12px; font-family: ui-monospace, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow: auto; }
+  .collapse-btn { background: none; border: 1px solid var(--border); color: var(--text); font-size: 12px; }
+  .badge.clickable { cursor: pointer; } .badge.clickable:hover { opacity: .85; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>ККД · Контроль качества данных по целям</h1>
+    <div class="sub" id="apiStatus">загрузка…</div>
+  </div>
+  <div class="sub">Прогоны: <span id="runInfo">—</span></div>
+</header>
+
+<div class="controls">
+  <div class="field">
+    <label for="runSelect">Прогон</label>
+    <select id="runSelect"></select>
+  </div>
+  <div class="field">
+    <label for="unitSelect">Подразделение</label>
+    <select id="unitSelect"></select>
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <button id="loadBtn">Показать</button>
+  </div>
+  <div class="field">
+    <label>&nbsp;</label>
+    <button id="refreshBtn" class="collapse-btn" title="Перечитать данные">⟳ Обновить</button>
+  </div>
+</div>
+
+<main>
+  <div id="errorMsg"></div>
+
+  <div class="section" id="summarySection" style="display:none">
+    <div class="section-head">
+      <span>Сводка качества данных</span>
+      <span class="hint" id="comparedHint"></span>
+    </div>
+    <div class="section-body">
+      <div class="metric-grid" id="metricsGrid"></div>
+
+      <div style="margin-top:18px; font-size:12px; color:var(--muted); font-weight:600;">Проблемы по важности</div>
+      <div class="sev-pills" id="sevPills" style="margin-top:8px;"></div>
+
+      <div style="margin-top:18px; font-size:12px; color:var(--muted); font-weight:600;">Дельта с прошлым прогоном</div>
+      <div class="delta-block" id="deltaBlock" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span>Найденные проблемы</span>
+      <span class="hint" id="issueCountHint"></span>
+    </div>
+    <div class="section-body">
+      <div class="filter-row">
+        <div class="field"><label>Правило</label><select id="fRule"><option value="">Все</option></select></div>
+        <div class="field"><label>Важность</label><select id="fSeverity"><option value="">Все</option></select></div>
+        <div class="field"><label>Статус дельты</label><select id="fDelta"><option value="">Все</option><option value="new">new</option><option value="persisting">persisting</option><option value="resolved">resolved</option></select></div>
+        <div class="field" style="align-self:flex-end;"><button id="applyFilters">Применить</button></div>
+      </div>
+      <div id="issuesBody"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span>Структура (для справки)</span>
+      <span class="hint">подразделения и правила</span>
+    </div>
+    <div class="section-body" id="metaBody"></div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const state = { runs: [], units: [], rules: [], current: { runId: null, unitId: null, offset: 0, limit: 20, total: 0 } };
+const $ = (id) => document.getElementById(id);
+
+async function jfetch(url) {
+  const r = await fetch(url);
+  return handle(r);
+}
+async function handle(r) {
+  const ct = r.headers.get('content-type') || '';
+  const body = ct.includes('json') ? await r.json() : await r.text();
+  if (!r.ok) {
+    const msg = (body && body.error) ? (body.error.message || body.error.code) : (typeof body === 'string' ? body : JSON.stringify(body));
+    throw new Error(msg || ('HTTP ' + r.status));
+  }
+  return body;
+}
+
+function setStatus(t) { $('apiStatus').textContent = t; }
+function showError(msg) {
+  const box = $('errorMsg');
+  box.innerHTML = '<div class="error-box">⚠ ' + escapeHtml(msg) + '</div>';
+}
+function clearError() { $('errorMsg').innerHTML = ''; }
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
+
+// ---------- Meta ----------
+async function loadMeta() {
+  const m = await jfetch('/api/meta');
+  state.units = m.units || [];
+  state.rules = m.rules || [];
+  fillUnitSelect();
+  fillRuleFilter();
+}
+
+function unitName(id) {
+  const u = state.units.find(x => x.id === id);
+  return u ? (u.code || ('#'+id)) : null;
+}
+function fillUnitSelect() {
+  const sel = $('unitSelect');
+  sel.innerHTML = '';
+  state.units.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = u.name + ' (' + u.code + ')';
+    sel.appendChild(opt);
+  });
+  if (sel.options.length) sel.value = state.units[0].id;
+}
+function fillRuleFilter() {
+  const sel = $('fRule');
+  sel.innerHTML = '<option value="">Все</option>';
+  state.rules.forEach(r => {
+    const o = document.createElement('option'); o.value = r.code; o.textContent = r.code; sel.appendChild(o);
+  });
+}
+function renderMeta() {
+  const rows = state.units.map(u => {
+    const parent = u.parentId ? unitName(u.parentId) : '—';
+    return '<tr><td class="mono">' + u.code + '</td><td>' + escapeHtml(u.name) + '</td><td>' + escapeHtml(parent || '—') + '</td></tr>';
+  }).join('');
+  let html = '<table><thead><tr><th>Подразделение</th><th>Название</th><th>Родитель</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  html += '<div style="margin-top:14px; font-size:12px; color:var(--muted);">Правила: ' +
+    state.rules.map(r => '<span class="badge b-' + r.severity + '">' + r.code + '</span>').join(' ') + '</div>';
+  $('metaBody').innerHTML = html;
+}
+
+// ---------- Runs ----------
+async function loadRuns() {
+  state.runs = await jfetch('/api/runs');
+  const sel = $('runSelect');
+  sel.innerHTML = '';
+  state.runs.forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    // в API id — это код RUN-00x, а не числовой id; используем код как ключ
+    o.textContent = (r.id || r.code) + ' · ' + (r.snapshotDate || '') + ' · ' + (r.status || '') + ' · проблем: ' + (r.issueCount ?? 0);
+    sel.appendChild(o);
+  });
+  if (state.runs.length && !state.current.runId) sel.selectedIndex = 0;
+  updateRunInfo();
+}
+function updateRunInfo() {
+  const sel = $('runSelect');
+  const r = sel.options[sel.selectedIndex];
+  $('runInfo').textContent = r ? r.textContent : '—';
+}
+
+// ---------- Summary ----------
+async function loadSummary(runId, unitId) {
+  const s = await jfetch('/api/kkd/summary?run_id=' + encodeURIComponent(runId) + '&unit_id=' + encodeURIComponent(unitId));
+  renderSummary(s);
+}
+function renderSummary(s) {
+  $('summarySection').style.display = '';
+
+  const comp = s.comparedTo
+    ? 'Сравнение с прогоном ' + s.comparedTo.id + ' (' + (s.comparedTo.snapshotDate || '') + ')'
+    : 'Сравнения нет — это первый прогон';
+  $('comparedHint').textContent = comp;
+
+  const grid = $('metricsGrid');
+  grid.innerHTML = '';
+  (s.metrics || []).forEach(m => {
+    const hasComp = m.previous != null && m.delta != null;
+    const trendCls = m.trend === 'better' ? 'good' : (m.trend === 'worse' ? 'bad' : 'muted');
+    const trendTxt = m.trend === 'better' ? 'лучше' : (m.trend === 'worse' ? 'хуже' : (m.trend === 'same' ? 'без изменений' : '—'));
+    const deltaTxt = hasComp ? '' + m.delta + ' ' + (m.unit || '') : 'нет данных для сравнения';
+    grid.insertAdjacentHTML('beforeend',
+      '<div class="metric">' +
+        '<div class="m-title">' + escapeHtml(m.title || m.key) + '</div>' +
+        '<div class="m-value">' + (m.value != null ? m.value : '—') + '<span style="font-size:13px;color:var(--muted);"> ' + (m.unit || '') + '</span></div>' +
+        '<div class="m-delta ' + (hasComp ? trendCls : 'muted') + '">Δ ' + deltaTxt + (hasComp ? ' · ' + trendTxt : '') + '</div>' +
+        '<div class="m-comp">прошлое: ' + (hasComp ? m.previous : '—') + '</div>' +
+      '</div>');
+  });
+
+  const sev = $('sevPills');
+  sev.innerHTML = '';
+  (s.issuesBySeverity || []).forEach(x => {
+    const d = x.delta != null ? (x.delta > 0 ? '+' + x.delta : x.delta) : '—';
+    sev.insertAdjacentHTML('beforeend',
+      '<div class="sev-pill" title="Показать проблемы: ' + x.code + '">' +
+        '<span class="code badge b-' + x.code + '">' + x.code + '</span>' +
+        '<div class="cnt">' + (x.current ?? 0) + '</div>' +
+        '<div class="prev">было: ' + (x.previous != null ? x.previous : '—') + '</div>' +
+        '<div class="prev">Δ: ' + d + '</div>' +
+      '</div>');
+  });
+  // кликабельные счётчики new/persisting/resolved берутся из delta
+  renderDeltaClicks(s);
+
+  const dd = $('deltaBlock');
+  dd.innerHTML = '';
+  const d = s.delta || {};
+  renderDeltaItem(dd, 'new', d.newIssues, 'b-new', 'new', s);
+  renderDeltaItem(dd, 'persisting', d.persisting, 'b-persisting', 'persisting', s);
+  renderDeltaItem(dd, 'resolved', d.resolved, 'b-resolved', 'resolved', s);
+}
+function renderDeltaItem(container, label, val, cls, status, s) {
+  const hasComp = !!s.comparedTo;
+  container.insertAdjacentHTML('beforeend',
+    '<div class="delta-item"><div class="dl">' + label + '</div><div class="dv">' +
+    (val != null ? val : (hasComp ? '0' : '—')) + '</div>' +
+    (hasComp ? '<div class="dl"><span class="badge ' + cls + ' clickable" data-status="' + status + '">фильтр →</span></div>' : '<div class="dl">сравнения нет</div>') +
+    '</div>');
+}
+function renderDeltaClicks(s) {
+  document.querySelectorAll('[data-status]').forEach(el => {
+    el.onclick = () => { $('fDelta').value = el.getAttribute('data-status'); loadIssues(); };
+  });
+}
+
+// ---------- Issues ----------
+async function loadIssues() {
+  const runId = state.current.runId;
+  const params = new URLSearchParams({ run_id: runId, limit: state.current.limit, offset: state.current.offset });
+  const v = $('fRule').value; if (v) params.set('rule', v);
+  const sev = $('fSeverity').value; if (sev) params.set('severity', sev);
+  const del = $('fDelta').value; if (del) params.set('delta', del);
+  const unitCode = state.units.find(u => u.id == $('unitSelect').value);
+  if (unitCode && unitCode.code !== 'HQ-CIB') params.set('unit', unitCode.code);
+
+  const p = await jfetch('/api/kkd/issues?' + params.toString());
+  state.current.total = p.total;
+  renderIssues(p);
+}
+function renderIssues(p) {
+  $('issueCountHint').textContent = 'Найдено: ' + p.total;
+  const body = $('issuesBody');
+  if (!p.items || p.items.length === 0) {
+    body.innerHTML = '<div class="empty-box">Проблем не найдено по выбранным фильтрам</div>';
+  } else {
+    const rows = p.items.map(i =>
+      '<tr>' +
+        '<td><span class="badge b-' + i.severity + '">' + i.severity + '</span></td>' +
+        '<td class="mono">' + escapeHtml(i.rule || '') + '</td>' +
+        '<td class="mono">' + escapeHtml(i.objectRef || '') + '</td>' +
+        '<td>' + escapeHtml(i.unitId || '—') + '</td>' +
+        '<td>' + escapeHtml(i.actualValue ?? '—') + '</td>' +
+        '<td>' + escapeHtml(i.expectedValue ?? '—') + '</td>' +
+        '<td>' + escapeHtml(i.recommendation || '—') + '</td>' +
+        '<td><span class="badge b-' + (i.deltaStatus || 'new') + '">' + (i.deltaStatus || '—') + '</span></td>' +
+      '</tr>').join('');
+    body.innerHTML = '<table><thead><tr><th>Важность</th><th>Правило</th><th>Объект</th><th>Подразделение</th><th>Факт</th><th>Ожидается</th><th>Рекомендация</th><th>Дельта</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  body.insertAdjacentHTML('beforeend',
+    '<div class="pagination">' +
+      '<button id="prevPage"' + (state.current.offset <= 0 ? ' disabled' : '') + '>← назад</button>' +
+      '<span>' + (state.current.offset + 1) + '–' + Math.min(state.current.offset + state.current.limit, p.total) + ' из ' + p.total + '</span>' +
+      '<button id="nextPage"' + (state.current.offset + state.current.limit >= p.total ? ' disabled' : '') + '>вперёд →</button>' +
+    '</div>');
+  const pb = $('prevPage'); if (pb) pb.onclick = () => { state.current.offset = Math.max(0, state.current.offset - state.current.limit); loadIssues(); };
+  const nb = $('nextPage'); if (nb) nb.onclick = () => { state.current.offset = state.current.offset + state.current.limit; loadIssues(); };
+}
+
+// ---------- main load ----------
+async function load() {
+  try {
+    clearError(); setStatus('загрузка…');
+    await loadMeta();
+    await loadRuns();
+    renderMeta();
+    setStatus('готово');
+
+    // первичная загрузка
+    const unit = $('unitSelect');
+    state.current.runId = state.runs[0].id;
+    state.current.unitId = unit.value;
+    await Promise.all([loadSummary(state.current.runId, state.current.unitId), loadIssues()]);
+  } catch (e) {
+    setStatus('ошибка');
+    showError(e.message);
+    console.error(e);
+  }
+}
+
+$('loadBtn').onclick = async () => {
+  try {
+    clearError(); setStatus('загрузка…');
+    state.current.runId = $('runSelect').value;
+    state.current.unitId = $('unitSelect').value;
+    state.current.offset = 0;
+    await Promise.all([loadSummary(state.current.runId, state.current.unitId), loadIssues()]);
+    setStatus('готово');
+  } catch (e) { showError(e.message); }
+};
+$('refreshBtn').onclick = load;
+$('runSelect').onchange = updateRunInfo;
+$('applyFilters').onclick = () => { state.current.offset = 0; loadIssues(); };
+
+load();
+</script>
+</body>
+</html>
