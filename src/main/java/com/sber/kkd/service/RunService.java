@@ -41,10 +41,14 @@ public class RunService {
                 .toList();
     }
 
+    /**
+     * Возвращает успешный прогон по коду (например "RUN-002").
+     * 404, если прогон не найден; 409 RUN_FAILED, если прогон завершился с ошибкой.
+     */
     @Transactional(readOnly = true)
-    public KkdRun getRequiredRun(Long runId) {
-        KkdRun run = runRepository.findById(runId)
-                .orElseThrow(() -> ApiException.notFound("Прогон не найден: " + runId));
+    public KkdRun getRequiredRun(String code) {
+        KkdRun run = runRepository.findByCode(code)
+                .orElseThrow(() -> ApiException.notFound("Прогон не найден: " + code));
         if (!KkdRun.STATUS_SUCCESS.equals(run.getStatus())) {
             throw ApiException.runFailed("Прогон завершился с ошибкой: " + run.getCode());
         }
@@ -57,15 +61,14 @@ public class RunService {
     }
 
     /**
-     * Находит успешный прогон по id, если он существует и успешен; иначе null.
-     * Используется для сравнения: если прошлый прогон упал — сравнения нет.
+     * Находит успешный прогон по коду, если он существует и успешен; иначе null.
      */
     @Transactional(readOnly = true)
-    public KkdRun findSuccessRun(Long runId) {
-        if (runId == null) {
+    public KkdRun findSuccessRunByCode(String code) {
+        if (code == null || code.isBlank()) {
             return null;
         }
-        KkdRun run = runRepository.findById(runId).orElse(null);
+        KkdRun run = runRepository.findByCode(code).orElse(null);
         if (run == null || !KkdRun.STATUS_SUCCESS.equals(run.getStatus())) {
             return null;
         }

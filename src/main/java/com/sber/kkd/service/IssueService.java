@@ -2,18 +2,15 @@ package com.sber.kkd.service;
 
 import com.sber.kkd.api.dto.IssueDto;
 import com.sber.kkd.api.dto.IssuesPageDto;
-import com.sber.kkd.api.exception.ApiException;
 import com.sber.kkd.domain.Issue;
 import com.sber.kkd.domain.KkdRun;
 import com.sber.kkd.domain.Unit;
 import com.sber.kkd.repository.IssueRepository;
+import com.sber.kkd.repository.RunRepository;
 import com.sber.kkd.repository.UnitRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,25 +25,28 @@ public class IssueService {
 
     private final IssueRepository issueRepository;
     private final UnitRepository unitRepository;
+    private final RunRepository runRepository;
     private final RunService runService;
 
     public IssueService(IssueRepository issueRepository,
                         UnitRepository unitRepository,
+                        RunRepository runRepository,
                         RunService runService) {
         this.issueRepository = issueRepository;
         this.unitRepository = unitRepository;
+        this.runRepository = runRepository;
         this.runService = runService;
     }
 
     @Transactional(readOnly = true)
-    public IssuesPageDto issues(Long runId, IssuesRequest request, int limit, int offset) {
-        KkdRun run = runService.getRequiredRun(runId);
+    public IssuesPageDto issues(String runCode, IssuesRequest request, int limit, int offset) {
+        KkdRun run = runService.getRequiredRun(runCode);
 
-        List<Issue> all = issueRepository.findByRunId(runId);
+        List<Issue> all = issueRepository.findByRunId(run.getId());
         List<Issue> previous = List.of();
         if (run.getComparedToRunId() != null) {
-            KkdRun cmp = runService.findSuccessRun(run.getComparedToRunId());
-            if (cmp != null) {
+            KkdRun cmp = runRepository.findById(run.getComparedToRunId()).orElse(null);
+            if (cmp != null && KkdRun.STATUS_SUCCESS.equals(cmp.getStatus())) {
                 previous = issueRepository.findByRunId(cmp.getId());
             }
         }

@@ -81,13 +81,13 @@ class KkdServiceTest {
     @Test
     void summaryComputesChildrenAndDelta() {
         Long runId = 2L, prevRunId = 1L;
-        when(runService.getRequiredRun(runId)).thenReturn(run(runId, "RUN-002", prevRunId));
+        when(runService.getRequiredRun("RUN-002")).thenReturn(run(runId, "RUN-002", prevRunId));
         when(runRepository.findById(prevRunId)).thenReturn(Optional.of(run(prevRunId, "RUN-001", null)));
 
         Unit hq = unit(1, "HQ-CIB", null);
         Unit child = unit(2, "CIB-SALES", 1L);
         when(unitRepository.findAll()).thenReturn(List.of(hq, child));
-        when(unitRepository.findById(1L)).thenReturn(Optional.of(hq));
+        when(unitRepository.findByCode("HQ-CIB")).thenReturn(Optional.of(hq));
 
         // дерево HQ-CIB = {1, 2}: две активные цели
         List<Goal> goals = List.of(active(10, 1L), active(20, 2L));
@@ -106,7 +106,7 @@ class KkdServiceTest {
         when(issueRepository.findByRunId(runId)).thenReturn(curIssues);
         when(issueRepository.findByRunId(prevRunId)).thenReturn(prevIssues);
 
-        SummaryDto summary = service.summary(runId, 1L);
+        SummaryDto summary = service.summary("RUN-002", "HQ-CIB");
 
         // RUN-002: 2 активные, 0 корректных (обе имеют проблемы) -> доля 0.0
         MetricDto share = summary.metrics().get(0);
@@ -114,7 +114,6 @@ class KkdServiceTest {
         assertEquals(0.0, share.value());
         assertEquals(50.0, share.previous()); // RUN-001: только goal:20 грязная -> 1/2 корректных = 50%
 
-        // fallback для correct count current: обе dirty
         MetricDto total = summary.metrics().get(1);
         assertEquals(2.0, total.value());
         assertEquals(1.0, total.previous());
@@ -130,18 +129,17 @@ class KkdServiceTest {
     /** Первый прогон без сравнения: previous и delta равны null. */
     @Test
     void firstRunHasNullPreviousAndDelta() {
-        Long runId = 1L;
-        when(runService.getRequiredRun(runId)).thenReturn(run(runId, "RUN-001", null));
+        when(runService.getRequiredRun("RUN-001")).thenReturn(run(1L, "RUN-001", null));
 
         Unit hq = unit(1, "HQ-CIB", null);
         when(unitRepository.findAll()).thenReturn(List.of(hq));
-        when(unitRepository.findById(1L)).thenReturn(Optional.of(hq));
+        when(unitRepository.findByCode("HQ-CIB")).thenReturn(Optional.of(hq));
 
         List<Goal> goals = List.of(active(10, 1L)); // корректная, проблем нет
         when(goalRepository.findByUnitIdIn(anyCollection())).thenReturn(goals);
-        when(issueRepository.findByRunId(runId)).thenReturn(List.of());
+        when(issueRepository.findByRunId(1L)).thenReturn(List.of());
 
-        SummaryDto summary = service.summary(runId, 1L);
+        SummaryDto summary = service.summary("RUN-001", "HQ-CIB");
 
         assertNull(summary.comparedTo());
         MetricDto share = summary.metrics().get(0);
@@ -153,13 +151,10 @@ class KkdServiceTest {
     /** Неуспешный прогон -> 409 RUN_FAILED. */
     @Test
     void failedRunThrows409() {
-        KkdRun failed = new KkdRun();
-        failed.setId(6L);
-        failed.setCode("RUN-006");
-        failed.setStatus(KkdRun.STATUS_FAILED);
-        when(runService.getRequiredRun(6L)).thenThrow(ApiException.runFailed("Прогон завершился с ошибкой: RUN-006"));
+        when(runService.getRequiredRun("RUN-006"))
+                .thenThrow(ApiException.runFailed("Прогон завершился с ошибкой: RUN-006"));
 
-        ApiException ex = assertThrows(ApiException.class, () -> service.summary(6L, 1L));
+        ApiException ex = assertThrows(ApiException.class, () -> service.summary("RUN-006", "HQ-CIB"));
         assertEquals(409, ex.getStatus());
         assertEquals("RUN_FAILED", ex.getCode());
     }

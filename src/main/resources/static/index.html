@@ -227,11 +227,11 @@ function fillUnitSelect() {
   sel.innerHTML = '';
   state.units.forEach(u => {
     const opt = document.createElement('option');
-    opt.value = u.id;
+    opt.value = u.code;   // API принимает код подразделения
     opt.textContent = u.name + ' (' + u.code + ')';
     sel.appendChild(opt);
   });
-  if (sel.options.length) sel.value = state.units[0].id;
+  if (sel.options.length) sel.value = state.units[0].code;
 }
 function fillRuleFilter() {
   const sel = $('fRule');
@@ -273,8 +273,8 @@ function updateRunInfo() {
 }
 
 // ---------- Summary ----------
-async function loadSummary(runId, unitId) {
-  const s = await jfetch('/api/kkd/summary?run_id=' + encodeURIComponent(runId) + '&unit_id=' + encodeURIComponent(unitId));
+async function loadSummary(runId, unitCode) {
+  const s = await jfetch('/api/kkd/summary?run_id=' + encodeURIComponent(runId) + '&unit_id=' + encodeURIComponent(unitCode));
   renderSummary(s);
 }
 function renderSummary(s) {
@@ -344,8 +344,8 @@ async function loadIssues() {
   const v = $('fRule').value; if (v) params.set('rule', v);
   const sev = $('fSeverity').value; if (sev) params.set('severity', sev);
   const del = $('fDelta').value; if (del) params.set('delta', del);
-  const unitCode = state.units.find(u => u.id == $('unitSelect').value);
-  if (unitCode && unitCode.code !== 'HQ-CIB') params.set('unit', unitCode.code);
+  const unitCode = $('unitSelect').value;
+  if (unitCode) params.set('unit', unitCode);
 
   const p = await jfetch('/api/kkd/issues?' + params.toString());
   state.current.total = p.total;
@@ -391,10 +391,9 @@ async function load() {
     setStatus('готово');
 
     // первичная загрузка
-    const unit = $('unitSelect');
     state.current.runId = state.runs[0].id;
-    state.current.unitId = unit.value;
-    await Promise.all([loadSummary(state.current.runId, state.current.unitId), loadIssues()]);
+    state.current.unit = $('unitSelect').value;
+    await Promise.all([loadSummary(state.current.runId, state.current.unit), loadIssues()]);
   } catch (e) {
     setStatus('ошибка');
     showError(e.message);
@@ -406,9 +405,9 @@ $('loadBtn').onclick = async () => {
   try {
     clearError(); setStatus('загрузка…');
     state.current.runId = $('runSelect').value;
-    state.current.unitId = $('unitSelect').value;
+    state.current.unit = $('unitSelect').value;
     state.current.offset = 0;
-    await Promise.all([loadSummary(state.current.runId, state.current.unitId), loadIssues()]);
+    await Promise.all([loadSummary(state.current.runId, state.current.unit), loadIssues()]);
     setStatus('готово');
   } catch (e) { showError(e.message); }
 };

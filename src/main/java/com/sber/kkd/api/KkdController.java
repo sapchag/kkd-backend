@@ -54,13 +54,13 @@ public class KkdController {
     }
 
     @GetMapping("/kkd/summary")
-    public SummaryDto summary(@RequestParam Long run_id,
-                              @RequestParam Long unit_id) {
+    public SummaryDto summary(@RequestParam String run_id,
+                              @RequestParam String unit_id) {
         return kkdService.summary(run_id, unit_id);
     }
 
     @GetMapping("/kkd/issues")
-    public IssuesPageDto issues(@RequestParam Long run_id,
+    public IssuesPageDto issues(@RequestParam String run_id,
                                 @RequestParam(required = false) String rule,
                                 @RequestParam(required = false) String severity,
                                 @RequestParam(required = false) String unit,

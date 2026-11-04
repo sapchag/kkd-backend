@@ -56,10 +56,10 @@ public class KkdService {
     }
 
     @Transactional(readOnly = true)
-    public SummaryDto summary(Long runId, Long unitId) {
-        KkdRun run = runService.getRequiredRun(runId);
-        Unit unit = unitRepository.findById(unitId)
-                .orElseThrow(() -> ApiException.notFound("Подразделение не найдено: " + unitId));
+    public SummaryDto summary(String runCode, String unitCode) {
+        KkdRun run = runService.getRequiredRun(runCode);
+        Unit unit = unitRepository.findByCode(unitCode)
+                .orElseThrow(() -> ApiException.notFound("Подразделение не найдено: " + unitCode));
 
         List<Unit> allUnits = unitRepository.findAll();
         Set<Long> treeIds = descendantsOf(unit, allUnits);
